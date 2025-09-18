@@ -61,14 +61,25 @@ class ext_wifi(plugins.Plugin):
         if (os.path.exists("/sys/class/net/wlan1")):
             _log("External adapter present")
             self._write_status("wlan1")
+            subprocess.run('sed -i s/mon0/{interface}/g /usr/bin/bettercap-launcher'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/mon0/{interface}/g /usr/local/share/bettercap/caplets/pwnagotchi-auto.cap'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/mon0/{interface}/g /usr/local/share/bettercap/caplets/pwnagotchi-manual.cap'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/mon0/{interface}/g /etc/pwnagotchi/config.toml'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/mon0/{interface}/g /usr/bin/pwnlib'.format(interface=interface), shell=True).stdout
         else:
             _log("Internal adapter present")
             self._write_status("wlan0")
+            subprocess.run('sed -i s/{interface}/mon0/g /usr/bin/bettercap-launcher'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/{interface}/mon0/g /usr/local/share/bettercap/caplets/pwnagotchi-auto.cap'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/{interface}/mon0/g /usr/local/share/bettercap/caplets/pwnagotchi-manual.cap'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/{interface}/mon0/g /etc/pwnagotchi/config.toml'.format(interface=interface), shell=True).stdout
+            subprocess.run('sed -i s/{interface}/mon0/g /usr/bin/pwnlib'.format(interface=interface), shell=True).stdout
 
     def on_ui_update(self, ui):
         ui.set('antenna', self._read_status())
         
     def on_epoch(self, agent, epoch, epoch_data):
+        _log("checking for adapter changes...")
         if (os.path.exists("/sys/class/net/wlan1") and self._read_status() != "wlan1"):
             subprocess.run('sed -i s/mon0/{interface}/g /usr/bin/bettercap-launcher'.format(interface=interface), shell=True).stdout
             subprocess.run('sed -i s/mon0/{interface}/g /usr/local/share/bettercap/caplets/pwnagotchi-auto.cap'.format(interface=interface), shell=True).stdout
@@ -87,6 +98,8 @@ class ext_wifi(plugins.Plugin):
             _log("Internal adapter activated")
             self._write_status("wlan0")
             os.system("sudo reboot")
+        else:
+            _log("no changes found.")
 
 def _run(cmd):
     result = subprocess.run(cmd, shell=True, stdin=None, stderr=None, stdout=subprocess.PIPE, executable="/bin/bash")
